@@ -10,7 +10,7 @@ namespace NotifyProcessor.Logic {
                 return null;
             }
 
-            return rules.FirstOrDefault();
+            return found.FirstOrDefault();
         }
     }
 }

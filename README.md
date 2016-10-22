@@ -26,7 +26,7 @@ POST http://127.0.0.1:5000/api/notification
 "Text" : "pong"
 }
 
-wird keine Email gesendet
+ausführt, wird keine Email gesendet.
 
 Wenn man aber
 {

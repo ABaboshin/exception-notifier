@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using NotifyProcessor.Config;
 using RestListener.Models;
 using StackExchange.Redis;
+using System.Threading;
 
 namespace NotifyProcessor.Logic {
     public class RedisListener {
@@ -17,10 +18,15 @@ namespace NotifyProcessor.Logic {
             var ip = System.Net.Dns.GetHostEntryAsync(Config.RedisOptions.RedisHost).Result;
             var redis = ConnectionMultiplexer.Connect(ip.AddressList[0].ToString());
             
-            var sub = redis.GetSubscriber();
-            sub.Subscribe(Config.RedisOptions.ChannelName, (channel, msg)=>{
-                ProcessNotification((string)msg);
-            });
+            while (true) {
+                Thread.Sleep(300);
+                var db = redis.GetDatabase();
+                var entries = db.SortedSetRangeByScore(Config.RedisOptions.SetName, take:1);
+                foreach (var entry in entries) {
+                    ProcessNotification(entry.ToString());
+                    var result = db.SortedSetRemoveRangeByValue(Config.RedisOptions.SetName, entry, entry);
+                }
+            }
         }
 
         void ProcessNotification(string msg) {

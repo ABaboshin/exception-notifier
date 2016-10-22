@@ -28,9 +28,12 @@ namespace RestListener.Controllers {
             try {
                 var ip = System.Net.Dns.GetHostEntryAsync(_optionsAccessor.Value.RedisHost).Result;
                 var redis = ConnectionMultiplexer.Connect(ip.AddressList[0].ToString());
-                var sub = redis.GetSubscriber();
+                //if (string.IsNullOrEmpty(item.Id)) 
+                item.Id = Guid.NewGuid().ToString();
+                var db = redis.GetDatabase();
                 var json = JsonConvert.SerializeObject(item);
-                sub.Publish(_optionsAccessor.Value.ChannelName, json);
+                var score = DateTime.UtcNow.Ticks;
+                var result = db.SortedSetAdd(_optionsAccessor.Value.SetName, json, score);
             } catch (Exception ex) {
                 return BadRequest(ex);
             }
