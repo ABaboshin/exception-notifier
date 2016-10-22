@@ -1,7 +1,38 @@
-a. uifd/ui-for-docker
-b. gitlab-ce
-c. docker run -d -v /var/run/docker.sock:/var/run/docker.sock --name dnsdock -p 172.17.0.1:53:53/udp tonistiigi/dnsdock
+1. Den Docker DNS Service starten
 
-1. https://github.com/camptocamp/docker_smtp
-2. docker run -d redis
-3. docker run -d -v /var/run/docker.sock:/var/run/docker.sock --name dnsdock -p 172.17.0.1:53:53/udp tonistiigi/dnsdock
+docker run -d -v /var/run/docker.sock:/var/run/docker.sock --name dnsdock -p 172.17.0.1:53:53/udp tonistiigi/dnsdock
+
+2. https://github.com/camptocamp/docker_smtp starten, die IP-Adresse des SMTPs notieren
+und in die notification-processor/appsettings.json eintragen.
+3. Redis starten
+docker run -d --name redis --hostname redis redis
+4. Die Apps bauen (als root)
+
+build-notification-processor.sh
+build-rest-listener.sh
+
+5. Die Apps starten (als root)
+
+docker run -d -p 5000:5000 ab:rest-listener
+docker run -d ab:notification-processor
+
+6. 
+
+Wenn man jetzt mit z.B. dem Postman 
+POST http://127.0.0.1:5000/api/notification
+{
+"source" :"prod",
+"ExceptionType" :"Version",
+"Text" : "pong"
+}
+
+wird keine Email gesendet
+
+Wenn man aber
+{
+"source" :"prod",
+"ExceptionType" :"Test",
+"Text" : "pong"
+}
+postet, wird eine Email gesendet.
+Siehe notification-processor/appsettings.json.

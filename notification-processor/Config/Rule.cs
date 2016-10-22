@@ -4,7 +4,7 @@ namespace NotifyProcessor.Config {
     public class Rule {
         public string Source { get; set; }
         public string ExceptionType { get; set; }
-        public bool Ignore { get; set; }
+        public bool Stop { get; set; }
         public string To { get; set; }
 
         public string Subject { get; set; }
@@ -25,7 +25,7 @@ namespace NotifyProcessor.Config {
                 return ExceptionType.ToUpper() == notification.ExceptionType.ToUpper();
             }
 
-            return false;
+            return true;
         }
 
         public string BuildSubject(Notification notification) {

@@ -14,7 +14,8 @@ namespace NotifyProcessor.Logic {
         public FullConfiguration Config { get; set; }
 
         public void Run() {
-            var redis = ConnectionMultiplexer.Connect(Config.RedisOptions.RedisHost);
+            var ip = System.Net.Dns.GetHostEntryAsync(Config.RedisOptions.RedisHost).Result;
+            var redis = ConnectionMultiplexer.Connect(ip.AddressList[0].ToString());
             
             var sub = redis.GetSubscriber();
             sub.Subscribe(Config.RedisOptions.ChannelName, (channel, msg)=>{
@@ -23,9 +24,11 @@ namespace NotifyProcessor.Logic {
         }
 
         void ProcessNotification(string msg) {
+            Console.WriteLine("process " + msg);
             var notification = (Notification)JsonConvert.DeserializeObject(msg, typeof(Notification));
             var rule = new RuleMatcher().FindRule(Config.Rules, notification);
             if (rule != null) {
+                Console.WriteLine("find rule " + rule.ToString());
                 var message = new MimeMessage();
                 message.From.Add(new MailboxAddress(Config.SmtpOptions.From, Config.SmtpOptions.From));
                 foreach (var addr in rule.To.Split(new []{','})) {

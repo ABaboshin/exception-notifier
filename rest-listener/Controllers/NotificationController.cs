@@ -26,9 +26,7 @@ namespace RestListener.Controllers {
             }
 
             try {
-                Console.WriteLine(_optionsAccessor.Value.RedisHost);
                 var ip = System.Net.Dns.GetHostEntryAsync(_optionsAccessor.Value.RedisHost).Result;
-                Console.WriteLine(ip.AddressList[0].ToString());
                 var redis = ConnectionMultiplexer.Connect(ip.AddressList[0].ToString());
                 var sub = redis.GetSubscriber();
                 var json = JsonConvert.SerializeObject(item);
