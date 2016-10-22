@@ -1,6 +1,6 @@
 namespace RestListener.Models
 {
-    public class Notify
+    public class Notification
     {
         public string Source { get; set; }
         public string ExceptionType { get; set; }

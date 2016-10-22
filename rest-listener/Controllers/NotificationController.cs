@@ -8,17 +8,17 @@ using StackExchange.Redis;
 
 namespace RestListener.Controllers {
     [Route("api/[controller]")]
-    public class NotifyController : Controller
+    public class NotificationController : Controller
     {
         private readonly IOptions<ListenerOptions> _optionsAccessor;
 
-        public NotifyController(IOptions<ListenerOptions> optionsAccessor)
+        public NotificationController(IOptions<ListenerOptions> optionsAccessor)
         {
             _optionsAccessor = optionsAccessor;
         }
 
         [HttpPost]
-        public IActionResult Create([FromBody] Notify item)
+        public IActionResult Create([FromBody] Notification item)
         {
             if (item == null)
             {
@@ -26,7 +26,8 @@ namespace RestListener.Controllers {
             }
 
             try {
-                var redis = ConnectionMultiplexer.Connect(_optionsAccessor.Value.RedisHost);
+                var ip = System.Net.Dns.GetHostEntryAsync(_optionsAccessor.Value.RedisHost).Result;
+                var redis = ConnectionMultiplexer.Connect(ip.AddressList[0].ToString());
                 var sub = redis.GetSubscriber();
                 var json = JsonConvert.SerializeObject(item);
                 sub.Publish(_optionsAccessor.Value.ChannelName, json);
