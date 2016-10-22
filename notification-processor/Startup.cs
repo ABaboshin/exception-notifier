@@ -16,7 +16,7 @@ namespace NotifyProcessor
         public Startup(IHostingEnvironment env)
         {
             var builder = new ConfigurationBuilder()
-                .SetBasePath(env.ContentRootPath)
+                 .SetBasePath(env.ContentRootPath)
                 // .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 ;

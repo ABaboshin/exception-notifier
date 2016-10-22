@@ -21,10 +21,21 @@ namespace NotifyProcessor.Logic {
             while (true) {
                 Thread.Sleep(300);
                 var db = redis.GetDatabase();
-                var entries = db.SortedSetRangeByScore(Config.RedisOptions.SetName, take:1);
+                // take 1 message
+                var entries = db.SortedSetRangeByScore(Config.RedisOptions.ActiveSet, take:1);
                 foreach (var entry in entries) {
+                    // move it to processing set
+                    db.SortedSetRemove(Config.RedisOptions.ActiveSet, entry);
+                    db.SortedSetAdd(Config.RedisOptions.ProcessingSet, entry, DateTime.UtcNow.Ticks);
+
+                    // process it
                     ProcessNotification(entry.ToString());
-                    var result = db.SortedSetRemoveRangeByValue(Config.RedisOptions.SetName, entry, entry);
+
+                    // and then move it to done set
+                    db.SortedSetRemove(Config.RedisOptions.ProcessingSet, entry);
+                    db.SortedSetAdd(Config.RedisOptions.DoneSet, entry, DateTime.UtcNow.Ticks);
+
+                    
                 }
             }
         }

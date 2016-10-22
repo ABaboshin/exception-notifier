@@ -31,9 +31,11 @@ namespace RestListener.Controllers {
                 //if (string.IsNullOrEmpty(item.Id)) 
                 item.Id = Guid.NewGuid().ToString();
                 var db = redis.GetDatabase();
-                var json = JsonConvert.SerializeObject(item);
-                var score = DateTime.UtcNow.Ticks;
-                var result = db.SortedSetAdd(_optionsAccessor.Value.SetName, json, score);
+                var result = db.SortedSetAdd(
+                    _optionsAccessor.Value.ActiveSet,
+                    JsonConvert.SerializeObject(item),
+                    DateTime.UtcNow.Ticks
+                );
             } catch (Exception ex) {
                 return BadRequest(ex);
             }

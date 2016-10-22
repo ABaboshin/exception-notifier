@@ -36,3 +36,12 @@ Wenn man aber
 }
 postet, wird eine Email gesendet.
 Siehe notification-processor/appsettings.json.
+
+
+------
+
+docker ps --filter "status=exited" | awk '{print $1}' | xargs docker rm
+docker images | grep "<none>" | awk "{print \$3}" | xargs docker rmi
+find '/var/lib/docker/volumes/' -mindepth 1 -maxdepth 1 -type d | grep -vFf <(
+  docker ps -aq | xargs docker inspect | jq -r '.[]|.Mounts|.[]|.Name|select(.)'
+) | xargs rm -rf
