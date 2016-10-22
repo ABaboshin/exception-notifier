@@ -1,5 +1,7 @@
 FROM microsoft/dotnet:latest
-COPY . /root/app
-RUN cd /root/app && dotnet restore && dotnet publish
-ENTRYPOINT dotnet /root/app/bin/Debug/netcoreapp1.0/publish/app.dll
-#ENTRYPOINT sh /root/app/entry-point.sh
+RUN mkdir /root/app
+COPY notify-processor /root/app/notify-processor
+COPY shared /root/app/shared
+RUN cd /root/app/notify-processor && dotnet restore && dotnet publish
+EXPOSE 5000/tcp
+ENTRYPOINT dotnet /root/app/notify-processor/bin/Debug/netcoreapp1.0/publish/notify-processor.dll

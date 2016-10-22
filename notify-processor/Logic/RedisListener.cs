@@ -14,10 +14,10 @@ namespace NotifyProcessor.Logic {
         public FullConfiguration Config { get; set; }
 
         public void Run() {
-            var redis = ConnectionMultiplexer.Connect(Config.ListenerOptions.RedisHost);
+            var redis = ConnectionMultiplexer.Connect(Config.RedisOptions.RedisHost);
             
             var sub = redis.GetSubscriber();
-            sub.Subscribe(Config.ListenerOptions.ChannelName, (channel, msg)=>{
+            sub.Subscribe(Config.RedisOptions.ChannelName, (channel, msg)=>{
                 ProcessNotification((string)msg);
             });
         }

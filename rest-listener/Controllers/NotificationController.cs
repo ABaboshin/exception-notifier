@@ -2,7 +2,7 @@ using System;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using RestListener.Config;
+using NotifierShared.Config;
 using RestListener.Models;
 using StackExchange.Redis;
 
@@ -10,9 +10,9 @@ namespace RestListener.Controllers {
     [Route("api/[controller]")]
     public class NotificationController : Controller
     {
-        private readonly IOptions<ListenerOptions> _optionsAccessor;
+        private readonly IOptions<RedisOptions> _optionsAccessor;
 
-        public NotificationController(IOptions<ListenerOptions> optionsAccessor)
+        public NotificationController(IOptions<RedisOptions> optionsAccessor)
         {
             _optionsAccessor = optionsAccessor;
         }

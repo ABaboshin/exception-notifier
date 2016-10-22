@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using RestListener.Config;
+using NotifierShared.Config;
 
 namespace RestListener
 {
@@ -27,7 +27,7 @@ namespace RestListener
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddOptions();
-            services.Configure<ListenerOptions>(Configuration.GetSection("ListenerOptions"));
+            services.Configure<RedisOptions>(Configuration.GetSection("RedisOptions"));
             services.AddMvc();
         }
 

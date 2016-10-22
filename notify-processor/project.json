@@ -7,7 +7,13 @@
   "version": "1.0.0-*",
   "buildOptions": {
     "debugType": "portable",
-    "emitEntryPoint": true
+    "emitEntryPoint": true,
+    "compile": {
+      "include": [
+        "../shared/**/*.cs"
+      ]
+}
+
   },
   "dependencies": {},
   "frameworks": {

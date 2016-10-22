@@ -1,5 +1,7 @@
 FROM microsoft/dotnet:latest
-COPY . /root/app
-RUN cd /root/app && dotnet restore && dotnet publish
+RUN mkdir /root/app
+COPY rest-listener /root/app/rest-listener
+COPY shared /root/app/shared
+RUN cd /root/app/rest-listener && dotnet restore && dotnet publish
 EXPOSE 5000/tcp
-ENTRYPOINT dotnet /root/app/bin/Debug/netcoreapp1.0/publish/app.dll
+ENTRYPOINT dotnet /root/app/rest-listener/bin/Debug/netcoreapp1.0/publish/rest-listener.dll
