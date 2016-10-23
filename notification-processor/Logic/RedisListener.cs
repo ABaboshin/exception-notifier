@@ -6,6 +6,7 @@ using MimeKit;
 using MailKit.Security;
 using Newtonsoft.Json;
 using NotifyProcessor.Config;
+using NotifierShared.Logic;
 using RestListener.Models;
 using StackExchange.Redis;
 using System.Threading;
@@ -16,8 +17,7 @@ namespace NotifyProcessor.Logic {
         public FullConfiguration Config { get; set; }
 
         public void Run() {
-            var ip = System.Net.Dns.GetHostEntryAsync(Config.RedisOptions.RedisHost).Result;
-            var redis = ConnectionMultiplexer.Connect(ip.AddressList[0].ToString());
+            var redis = ConnectionMultiplexer.Connect(NetHelper.ResolceNameToIp(Config.RedisOptions.RedisHost));
             
             while (true) {
                 Thread.Sleep(300);
@@ -75,7 +75,7 @@ namespace NotifyProcessor.Logic {
 
                     using (var client = new SmtpClient())
                     {
-                        client.Connect(Config.SmtpOptions.Host, 25, false);
+                        client.Connect(NetHelper.ResolceNameToIp(Config.SmtpOptions.Host), 25, false);
                         if (Config.SmtpOptions.Auth) {
                             client.Authenticate(
                                 Config.SmtpOptions.Login,

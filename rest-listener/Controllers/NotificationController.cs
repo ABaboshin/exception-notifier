@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using NotifierShared.Config;
+using NotifierShared.Logic;
 using RestListener.Models;
 using StackExchange.Redis;
 
@@ -26,10 +27,7 @@ namespace RestListener.Controllers {
             }
 
             try {
-                Console.WriteLine("redis " + _optionsAccessor.Value.RedisHost);
-                var ip = System.Net.Dns.GetHostEntryAsync(_optionsAccessor.Value.RedisHost).Result;
-                var redis = ConnectionMultiplexer.Connect(ip.AddressList[0].ToString());
-                //if (string.IsNullOrEmpty(item.Id)) 
+                var redis = ConnectionMultiplexer.Connect(NetHelper.ResolceNameToIp(_optionsAccessor.Value.RedisHost));
                 item.Id = Guid.NewGuid().ToString();
                 var db = redis.GetDatabase();
                 var result = db.SortedSetAdd(

@@ -1,2 +1,2 @@
-cd /root/app && dotnet restore && dotnet publish
-dotnet /root/app/bin/Debug/netcoreapp1.0/publish/app.dll
+cd /root/app/notification-processor && dotnet restore && dotnet publish
+dotnet /root/app/notification-processor/bin/Debug/netcoreapp1.0/publish/notification-processor.dll
