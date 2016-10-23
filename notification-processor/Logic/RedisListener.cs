@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Text;
 using MailKit.Net.Smtp;
 using MimeKit;
@@ -22,11 +23,17 @@ namespace NotifyProcessor.Logic {
                 Thread.Sleep(300);
                 var db = redis.GetDatabase();
                 // take 1 message
+                var transaction = db.CreateTransaction();
                 var entry = db.SortedSetRangeByScore(Config.RedisOptions.ActiveSet, take:1).FirstOrDefault();
-                if (entry == null) continue;
+                
                 // move it to processing set
-                db.SortedSetRemove(Config.RedisOptions.ActiveSet, entry);
-                db.SortedSetAdd(Config.RedisOptions.ProcessingSet, entry, DateTime.UtcNow.Ticks);
+                if (entry.HasValue) {
+                    db.SortedSetRemove(Config.RedisOptions.ActiveSet, entry);
+                    db.SortedSetAdd(Config.RedisOptions.ProcessingSet, entry, DateTime.UtcNow.Ticks);
+                }
+                transaction.Execute();
+
+                if (!entry.HasValue) continue;
 
                 // use Polly
                 new RetryRunner()
