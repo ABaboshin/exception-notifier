@@ -1,0 +1,32 @@
+version: '2'
+services:
+  listener:
+    ports:
+      - "5000:5000"
+    build:
+      dockerfile: rest-listener/Dockerfile
+      context: .
+    depends_on:
+      - redis
+    links:
+      - redis
+    external_links:
+      - smtp-sink
+
+  processor:
+    build:
+      dockerfile: notification-processor/Dockerfile
+      context: .
+    depends_on:
+      - redis
+    links:
+      - redis
+
+  redis:
+    hostname: redis
+    image: redis
+
+networks:
+  default:
+    external:
+      name: el_nw
