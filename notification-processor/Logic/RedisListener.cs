@@ -20,22 +20,17 @@ namespace NotifyProcessor.Logic {
             var redis = ConnectionMultiplexer.Connect(NetHelper.ResolceNameToIp(Config.RedisOptions.RedisHost));
             int failureCounts = 0;
             
-            while (true) {
+                while (true) {
                 Thread.Sleep(Config.RedisOptions.PollInterval);
                 Console.WriteLine("poll");
                 var db = redis.GetDatabase();
                 // take 1 message
-                var transaction = db.CreateTransaction();
-                var entry = db.SortedSetRangeByScore(Config.RedisOptions.ActiveSet, take:1).FirstOrDefault();
+                var entry = db.Zpop(Config.RedisOptions.ActiveSet).ToString();
+                if (string.IsNullOrEmpty(entry)) continue;
                 
                 // move it to processing set
-                if (entry.HasValue) {
-                    db.SortedSetRemove(Config.RedisOptions.ActiveSet, entry);
-                    db.SortedSetAdd(Config.RedisOptions.ProcessingSet, entry, DateTime.UtcNow.Ticks);
-                }
-                transaction.Execute();
-
-                if (!entry.HasValue) continue;
+                db.SortedSetRemove(Config.RedisOptions.ActiveSet, entry);
+                db.SortedSetAdd(Config.RedisOptions.ProcessingSet, entry, DateTime.UtcNow.Ticks);
 
                 // use Polly
                 new RetryRunner()
