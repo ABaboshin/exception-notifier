@@ -26,8 +26,9 @@ namespace RestListener.Controllers {
                 return BadRequest();
             }
 
+            ConnectionMultiplexer redis = null;
             try {
-                var redis = ConnectionMultiplexer.Connect(NetHelper.ResolceNameToIp(_optionsAccessor.Value.RedisHost));
+                redis = ConnectionMultiplexer.Connect(NetHelper.ResolceNameToIp(_optionsAccessor.Value.RedisHost));
                 item.Id = Guid.NewGuid().ToString();
                 var db = redis.GetDatabase();
                 var result = db.SortedSetAdd(
@@ -38,6 +39,11 @@ namespace RestListener.Controllers {
             } catch (Exception ex) {
                 Console.WriteLine(ex);
                 return BadRequest(ex);
+            } finally {
+                if (redis != null)
+                {
+                    redis.Close();
+                }
             }
             
             return Json("ok");

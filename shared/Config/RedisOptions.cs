@@ -5,5 +5,6 @@ namespace NotifierShared.Config {
         public string ProcessingSet {get;set;}
         public string DoneSet {get;set;}
         public string FailedSet {get;set;}
+        public int PollInterval { get; set; }
     }
 }

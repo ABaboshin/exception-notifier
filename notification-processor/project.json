@@ -9,11 +9,10 @@
     "debugType": "portable",
     "emitEntryPoint": true,
     "compile": {
-      "include": [
-        "../shared/**/*.cs"
-      ]
-}
-
+        "include": [
+          "../shared/**/*.cs"
+        ]
+  }
   },
   "dependencies": {},
   "frameworks": {

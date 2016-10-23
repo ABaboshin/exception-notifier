@@ -21,7 +21,8 @@ namespace NotifyProcessor.Logic {
             int failureCounts = 0;
             
             while (true) {
-                Thread.Sleep(300);
+                Thread.Sleep(Config.RedisOptions.PollInterval);
+                Console.WriteLine("poll");
                 var db = redis.GetDatabase();
                 // take 1 message
                 var transaction = db.CreateTransaction();
@@ -42,7 +43,8 @@ namespace NotifyProcessor.Logic {
                     // process it
                     ProcessNotification(entry.ToString());
                 })
-                .WithRetryCount(3)
+                .WithRetryCount(Config.FailureConfiguration.RetryCount)
+                .WithSleepBetweenRetry(Config.FailureConfiguration.SleepBetweenRetry)
                 .OnSuccess(()=>{
                     // and then move it to done set
                     db.SortedSetRemove(Config.RedisOptions.ProcessingSet, entry);
@@ -54,7 +56,7 @@ namespace NotifyProcessor.Logic {
                     // and then move it to failed set
                     db.SortedSetRemove(Config.RedisOptions.ProcessingSet, entry);
                     db.SortedSetAdd(Config.RedisOptions.FailedSet, entry, DateTime.UtcNow.Ticks);
-                    Thread.Sleep(failureCounts * 10000);
+                    Thread.Sleep(failureCounts * Config.FailureConfiguration.SleepStepOnFailure);
                 }).Run();
             }
         }
