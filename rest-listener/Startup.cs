@@ -16,8 +16,7 @@ namespace RestListener
         public Startup(IHostingEnvironment env)
         {
             var builder = new ConfigurationBuilder()
-                 .SetBasePath(env.ContentRootPath)
-                // .SetBasePath(Directory.GetCurrentDirectory())
+                .SetBasePath(!env.IsDevelopment() ? env.ContentRootPath : Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
                 ;
 
