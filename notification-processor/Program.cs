@@ -13,8 +13,6 @@ namespace NotifyProcessor
                 .Build();
 
             host.Run();
-
-
         }
     }
 }

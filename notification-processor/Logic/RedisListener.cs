@@ -18,6 +18,7 @@ namespace NotifyProcessor.Logic {
 
         public void Run() {
             var redis = ConnectionMultiplexer.Connect(NetHelper.ResolceNameToIp(Config.RedisOptions.RedisHost));
+            int failureCounts = 0;
             
             while (true) {
                 Thread.Sleep(300);
@@ -46,11 +47,14 @@ namespace NotifyProcessor.Logic {
                     // and then move it to done set
                     db.SortedSetRemove(Config.RedisOptions.ProcessingSet, entry);
                     db.SortedSetAdd(Config.RedisOptions.DoneSet, entry, DateTime.UtcNow.Ticks);
+                    failureCounts = 0;
                 })
                 .OnFailure(()=>{
+                    failureCounts++;
                     // and then move it to failed set
                     db.SortedSetRemove(Config.RedisOptions.ProcessingSet, entry);
                     db.SortedSetAdd(Config.RedisOptions.FailedSet, entry, DateTime.UtcNow.Ticks);
+                    Thread.Sleep(failureCounts * 10000);
                 }).Run();
             }
         }
