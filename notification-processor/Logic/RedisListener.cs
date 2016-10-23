@@ -22,52 +22,68 @@ namespace NotifyProcessor.Logic {
                 Thread.Sleep(300);
                 var db = redis.GetDatabase();
                 // take 1 message
-                var entries = db.SortedSetRangeByScore(Config.RedisOptions.ActiveSet, take:1);
-                foreach (var entry in entries) {
-                    // move it to processing set
-                    db.SortedSetRemove(Config.RedisOptions.ActiveSet, entry);
-                    db.SortedSetAdd(Config.RedisOptions.ProcessingSet, entry, DateTime.UtcNow.Ticks);
+                var entry = db.SortedSetRangeByScore(Config.RedisOptions.ActiveSet, take:1).FirstOrDefault();
+                if (entry == null) continue;
+                // move it to processing set
+                db.SortedSetRemove(Config.RedisOptions.ActiveSet, entry);
+                db.SortedSetAdd(Config.RedisOptions.ProcessingSet, entry, DateTime.UtcNow.Ticks);
 
+                // use Polly
+                new RetryRunner()
+                .WithAction(()=>{
                     // process it
                     ProcessNotification(entry.ToString());
-
+                })
+                .WithRetryCount(3)
+                .OnSuccess(()=>{
                     // and then move it to done set
                     db.SortedSetRemove(Config.RedisOptions.ProcessingSet, entry);
                     db.SortedSetAdd(Config.RedisOptions.DoneSet, entry, DateTime.UtcNow.Ticks);
-
-                    
-                }
+                })
+                .OnFailure(()=>{
+                    // and then move it to failed set
+                    db.SortedSetRemove(Config.RedisOptions.ProcessingSet, entry);
+                    db.SortedSetAdd(Config.RedisOptions.FailedSet, entry, DateTime.UtcNow.Ticks);
+                }).Run();
             }
         }
 
         void ProcessNotification(string msg) {
-            Console.WriteLine("process " + msg);
-            var notification = (Notification)JsonConvert.DeserializeObject(msg, typeof(Notification));
-            var rule = new RuleMatcher().FindRule(Config.Rules, notification);
-            if (rule != null) {
-                Console.WriteLine("find rule " + rule.ToString());
-                var message = new MimeMessage();
-                message.From.Add(new MailboxAddress(Config.SmtpOptions.From, Config.SmtpOptions.From));
-                foreach (var addr in rule.To.Split(new []{','})) {
-                    message.To.Add(new MailboxAddress(addr, addr));
-                }
-                message.Subject = rule.BuildSubject(notification);
-                message.Body = new TextPart("plain") {
-                    Text = rule.BuildBody(notification)
-                };
-
-                using (var client = new SmtpClient())
-                {
-                    client.Connect(Config.SmtpOptions.Host, 25, false);
-                    if (Config.SmtpOptions.Auth) {
-                        client.Authenticate(
-                            Config.SmtpOptions.Login,
-                            Config.SmtpOptions.Password
-                        );
+            try
+            {
+                Console.WriteLine("process " + msg);
+                var notification = (Notification)JsonConvert.DeserializeObject(msg, typeof(Notification));
+                var rule = new RuleMatcher().FindRule(Config.Rules, notification);
+                if (rule != null) {
+                    Console.WriteLine("find rule " + rule.ToString());
+                    var message = new MimeMessage();
+                    message.From.Add(new MailboxAddress(Config.SmtpOptions.From, Config.SmtpOptions.From));
+                    foreach (var addr in rule.To.Split(new []{','})) {
+                        message.To.Add(new MailboxAddress(addr, addr));
                     }
-                    client.Send(message);
-                    client.Disconnect(true);
+                    message.Subject = rule.BuildSubject(notification);
+                    message.Body = new TextPart("plain") {
+                        Text = rule.BuildBody(notification)
+                    };
+
+                    using (var client = new SmtpClient())
+                    {
+                        client.Connect(Config.SmtpOptions.Host, 25, false);
+                        if (Config.SmtpOptions.Auth) {
+                            client.Authenticate(
+                                Config.SmtpOptions.Login,
+                                Config.SmtpOptions.Password
+                            );
+                        }
+                        client.Send(message);
+                        client.Disconnect(true);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                throw new SendEmailException(ex);
             }
         }
     }
